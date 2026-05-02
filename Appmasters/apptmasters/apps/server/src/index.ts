@@ -1,0 +1,48 @@
+import Fastify from "fastify";
+
+const server = Fastify({ logger: true });
+
+// ── Pillar 1: Perception & Context ───────────────────
+import { apartmentRoutes } from "./pillar1-perception/apartment";
+import { roomRoutes } from "./pillar1-perception/rooms";
+
+// ── Pillar 2: Memory & State ──────────────────────────
+import { financesRoutes } from "./pillar2-memory/finances";
+import { choresRoutes } from "./pillar2-memory/chores";
+import { maintenanceRoutes } from "./pillar2-memory/maintenance";
+import { inventoryRoutes } from "./pillar2-memory/inventory";
+import { rulesRoutes } from "./pillar2-memory/rules";
+
+// ── Pillar 3: Action & Execution ──────────────────────
+import { notificationsRoutes } from "./pillar3-action/notifications";
+import { automationsRoutes } from "./pillar3-action/automations";
+
+// ── Pillar 4: Collaboration & Communication ───────────
+import { feedRoutes } from "./pillar4-collaboration/feed";
+import { calendarRoutes } from "./pillar4-collaboration/calendar";
+
+// ── Pillar 5: Safety, Ethics & Trust ─────────────────
+import { disputesRoutes } from "./pillar5-trust/disputes";
+import { auditRoutes } from "./pillar5-trust/audit";
+import { moveOutRoutes } from "./pillar5-trust/move-out";
+
+async function main() {
+  server.register(apartmentRoutes, { prefix: "/api/apartment" });
+  server.register(roomRoutes, { prefix: "/api/rooms" });
+  server.register(financesRoutes, { prefix: "/api/finances" });
+  server.register(choresRoutes, { prefix: "/api/chores" });
+  server.register(maintenanceRoutes, { prefix: "/api/maintenance" });
+  server.register(inventoryRoutes, { prefix: "/api/inventory" });
+  server.register(rulesRoutes, { prefix: "/api/rules" });
+  server.register(notificationsRoutes, { prefix: "/api/notifications" });
+  server.register(automationsRoutes, { prefix: "/api/automations" });
+  server.register(feedRoutes, { prefix: "/api/feed" });
+  server.register(calendarRoutes, { prefix: "/api/calendar" });
+  server.register(disputesRoutes, { prefix: "/api/disputes" });
+  server.register(auditRoutes, { prefix: "/api/audit" });
+  server.register(moveOutRoutes, { prefix: "/api/move-out" });
+
+  await server.listen({ port: 4000, host: "0.0.0.0" });
+}
+
+main().catch(console.error);

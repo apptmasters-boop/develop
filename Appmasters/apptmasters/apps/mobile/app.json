@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "ApptMasters",
+    "slug": "apptmasters",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icons/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.apptmasters.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.apptmasters.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      "expo-camera",
+      "expo-image-picker"
+    ],
+    "scheme": "apptmasters"
+  }
+}

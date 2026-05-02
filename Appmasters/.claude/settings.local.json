@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python \"C:\\\\Users\\\\Mamadou Diallo\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\462d8257-f94e-4de0-872e-d036c35b770c\\\\11284ff6-86be-4887-8f04-78307df031f2\\\\skills\\\\docx\\\\scripts\\\\office\\\\unpack.py\" ApptMasters_FivePillars_Plan.docx unpacked/)",
+      "Bash(python3 \"C:\\\\Users\\\\Mamadou Diallo\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\462d8257-f94e-4de0-872e-d036c35b770c\\\\11284ff6-86be-4887-8f04-78307df031f2\\\\skills\\\\docx\\\\scripts\\\\office\\\\unpack.py\" ApptMasters_FivePillars_Plan.docx unpacked/)",
+      "Bash(pandoc ApptMasters_FivePillars_Plan.docx -o output.md)",
+      "PowerShell(Add-Type -AssemblyName System.IO.Compression.FileSystem; $zip = [System.IO.Compression.ZipFile]::OpenRead\\(\"C:\\\\Users\\\\Mamadou Diallo\\\\OneDrive - The City University of New York\\\\Desktop\\\\Appmasters\\\\ApptMasters_FivePillars_Plan.docx\"\\); $entry = $zip.Entries | Where-Object { $_.FullName -eq \"word/document.xml\" }; $reader = New-Object System.IO.StreamReader\\($entry.Open\\(\\)\\); $content = $reader.ReadToEnd\\(\\); $reader.Close\\(\\); $zip.Dispose\\(\\); $content)"
+    ]
+  }
+}
