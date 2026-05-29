@@ -1,6 +1,11 @@
 import Fastify from "fastify";
+import jwt from "@fastify/jwt";
+import cors from "@fastify/cors";
 
 const server = Fastify({ logger: true });
+
+// ── Auth ──────────────────────────────────────────────
+import { authRoutes } from "./auth/routes";
 
 // ── Pillar 1: Perception & Context ───────────────────
 import { apartmentRoutes } from "./pillar1-perception/apartment";
@@ -27,6 +32,16 @@ import { auditRoutes } from "./pillar5-trust/audit";
 import { moveOutRoutes } from "./pillar5-trust/move-out";
 
 async function main() {
+  await server.register(cors, {
+    origin: process.env.WEB_URL ?? "http://localhost:3000",
+    credentials: true,
+  });
+
+  await server.register(jwt, {
+    secret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
+  });
+
+  server.register(authRoutes, { prefix: "/api/auth" });
   server.register(apartmentRoutes, { prefix: "/api/apartment" });
   server.register(roomRoutes, { prefix: "/api/rooms" });
   server.register(financesRoutes, { prefix: "/api/finances" });

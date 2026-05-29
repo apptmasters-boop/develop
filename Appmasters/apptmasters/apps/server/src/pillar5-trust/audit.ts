@@ -1,0 +1,5 @@
+import type { FastifyInstance } from "fastify";
+
+export async function auditRoutes(app: FastifyInstance) {
+  app.get("/", async () => ({ data: [], message: "Phase 8 — coming soon" }));
+}

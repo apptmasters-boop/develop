@@ -12,8 +12,13 @@
   },
   "dependencies": {
     "fastify": "^4.28.0",
+    "@fastify/jwt": "^8.0.0",
+    "@fastify/cors": "^9.0.0",
+    "@fastify/cookie": "^9.0.0",
     "drizzle-orm": "^0.30.0",
     "postgres": "^3.4.0",
+    "bcryptjs": "^2.4.3",
+    "zod": "^3.23.0",
     "@anthropic-ai/sdk": "^0.27.0",
     "@apptmasters/types": "*",
     "@apptmasters/utils": "*"
@@ -22,6 +27,7 @@
     "typescript": "^5.4.0",
     "tsx": "^4.9.0",
     "drizzle-kit": "^0.20.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "@types/bcryptjs": "^2.4.6"
   }
 }
