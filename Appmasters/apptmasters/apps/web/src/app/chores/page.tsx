@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
+import Link from "next/link";
 import { ChoresList } from "./ChoresList";
 
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
@@ -63,7 +64,7 @@ export default async function ChoresPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-4 py-6 pb-20">
         <ChoresList
           chores={chores}
           rooms={rooms}
@@ -73,6 +74,20 @@ export default async function ChoresPage() {
           token={token}
         />
       </main>
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex">
+        {[
+          { href: "/home", label: "Home", icon: "⌂" },
+          { href: "/chores", label: "Chores", icon: "✓" },
+          { href: "/finance", label: "Finance", icon: "$" },
+          { href: "/maintenance", label: "Issues", icon: "🔧" },
+        ].map((item) => (
+          <Link key={item.label} href={item.href}
+            className="flex-1 py-3 flex flex-col items-center gap-0.5 text-gray-400 hover:text-brand transition-colors">
+            <span className="text-lg leading-none">{item.icon}</span>
+            <span className="text-xs">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }

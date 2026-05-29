@@ -40,23 +40,26 @@ type Chore = {
   room?: { name: string } | null;
   dueAt: string;
 };
+type Balance = { userId: string; name: string; net: number };
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/signin");
   const token = (session as { token?: string }).token ?? "";
 
-  const [apartment, members, rooms, todayChores] = await Promise.all([
+  const [apartment, members, rooms, todayChores, balance] = await Promise.all([
     get<Apartment | null>("/api/apartment", token, null),
     get<Member[]>("/api/apartment/members", token, []),
     get<Room[]>("/api/rooms", token, []),
     get<Chore[]>("/api/chores?today=true", token, []),
+    get<Balance[]>("/api/finances/balance", token, []),
   ]);
 
   if (!apartment) redirect("/onboarding");
 
   const userId = (session.user as { id?: string })?.id ?? "";
   const myChores = todayChores.filter((c) => c.assignedToUserId === userId);
+  const myBalance = balance.find((b) => b.userId === userId);
   const pendingCount = todayChores.filter((c) => c.status === "pending").length;
   const overdueCount = todayChores.filter((c) => c.status === "overdue").length;
 
@@ -78,6 +81,21 @@ export default async function HomePage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+
+        {/* Balance pill */}
+        {myBalance !== undefined && (
+          <Link href="/finance" className="block">
+            <div className={`rounded-2xl p-4 flex items-center justify-between ${myBalance.net >= 0 ? "bg-green-50 border border-green-100" : "bg-red-50 border border-red-100"}`}>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">Your balance</p>
+                <p className={`text-xl font-bold ${myBalance.net >= 0 ? "text-green-700" : "text-red-600"}`}>
+                  {myBalance.net >= 0 ? "+" : ""}${Math.abs(myBalance.net).toFixed(2)}
+                </p>
+              </div>
+              <span className="text-sm text-gray-400">Finance →</span>
+            </div>
+          </Link>
+        )}
 
         {/* Today summary */}
         {(pendingCount > 0 || overdueCount > 0) && (
@@ -180,7 +198,7 @@ export default async function HomePage() {
         <section>
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Coming Soon</h2>
           <div className="grid grid-cols-2 gap-3">
-            {["Finance", "Maintenance", "Inventory", "Rules", "Calendar", "Feed"].map((label) => (
+            {["Inventory", "Rules", "Calendar", "Feed"].map((label) => (
               <div key={label} className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 text-center">
                 <p className="text-sm text-gray-400">{label}</p>
               </div>
@@ -194,8 +212,8 @@ export default async function HomePage() {
         {[
           { href: "/home", label: "Home", icon: "⌂" },
           { href: "/chores", label: "Chores", icon: "✓" },
-          { href: "/home", label: "Finance", icon: "$" },
-          { href: "/home", label: "More", icon: "⋯" },
+          { href: "/finance", label: "Finance", icon: "$" },
+          { href: "/maintenance", label: "Issues", icon: "🔧" },
         ].map((item) => (
           <Link
             key={item.label}
