@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
@@ -74,8 +75,11 @@ export default async function HomePage() {
               Code: <span className="font-mono font-medium text-gray-600">{apartment.inviteCode}</span>
             </p>
           </div>
-          <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand text-sm font-semibold">
-            {session.user?.name?.[0]?.toUpperCase()}
+          <div className="flex items-center gap-2">
+            <NotificationBell token={token} />
+            <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand text-sm font-semibold">
+              {session.user?.name?.[0]?.toUpperCase()}
+            </div>
           </div>
         </div>
       </header>

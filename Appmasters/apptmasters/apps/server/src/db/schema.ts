@@ -309,3 +309,67 @@ export const landlordContactsRelations = relations(landlordContacts, ({ one }) =
   issue: one(maintenanceIssues, { fields: [landlordContacts.issueId], references: [maintenanceIssues.id] }),
   contactedBy: one(users, { fields: [landlordContacts.contactedByUserId], references: [users.id] }),
 }));
+
+// ── Notifications ─────────────────────────────────────
+
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "chore_reminder",
+  "chore_overdue",
+  "chore_nudge",
+  "expense_added",
+  "settle_up_reminder",
+  "low_stock",
+  "rent_due",
+  "maintenance_followup",
+  "weekly_summary",
+  "house_rule_vote",
+  "dispute_raised",
+]);
+
+export const notifications = pgTable("notifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  type: notificationTypeEnum("type").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  body: text("body").notNull(),
+  referenceId: text("reference_id"),
+  read: boolean("read").default(false).notNull(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+});
+
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().unique().references(() => users.id),
+  choreReminders: boolean("chore_reminders").default(true).notNull(),
+  expenseAlerts: boolean("expense_alerts").default(true).notNull(),
+  settleReminders: boolean("settle_reminders").default(true).notNull(),
+  weeklyDigest: boolean("weekly_digest").default(true).notNull(),
+  nudgesEnabled: boolean("nudges_enabled").default(true).notNull(),
+  settleThresholdCents: integer("settle_threshold_cents").default(1000).notNull(),
+  quietHoursStart: varchar("quiet_hours_start", { length: 5 }).default("22:00").notNull(),
+  quietHoursEnd: varchar("quiet_hours_end", { length: 5 }).default("08:00").notNull(),
+});
+
+// Recurring chore template (for auto-generating next occurrence)
+export const choreTemplates = pgTable("chore_templates", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  roomId: text("room_id").notNull().references(() => rooms.id),
+  name: varchar("name", { length: 100 }).notNull(),
+  points: integer("points").default(1).notNull(),
+  assignmentMode: assignmentModeEnum("assignment_mode").default("rotating").notNull(),
+  frequencyDays: integer("frequency_days").default(7).notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, { fields: [notifications.userId], references: [users.id] }),
+  apartment: one(apartments, { fields: [notifications.apartmentId], references: [apartments.id] }),
+}));
+
+export const choreTemplatesRelations = relations(choreTemplates, ({ one }) => ({
+  apartment: one(apartments, { fields: [choreTemplates.apartmentId], references: [apartments.id] }),
+  room: one(rooms, { fields: [choreTemplates.roomId], references: [rooms.id] }),
+}));

@@ -12,6 +12,7 @@ import {
 import { generateId } from "../lib/id";
 import { requireAuth, type JwtPayload } from "../auth/middleware";
 import { simplifyDebts } from "@apptmasters/utils";
+import { createNotificationForMembers } from "../lib/notificationService";
 
 const CENTS = 100;
 
@@ -116,6 +117,19 @@ export async function financesRoutes(app: FastifyInstance) {
         amount: s.amount,
       }))
     );
+
+    // Notify participants (excluding the payer)
+    const others = body.data.participants.filter((uid) => uid !== payload.userId);
+    if (others.length > 0) {
+      await createNotificationForMembers(
+        others,
+        membership.apartmentId,
+        "expense_added",
+        "New expense added 💰",
+        `${body.data.description}: $${body.data.amount.toFixed(2)} split between you.`,
+        id
+      );
+    }
 
     return { id, amount: body.data.amount, description: body.data.description };
   });
