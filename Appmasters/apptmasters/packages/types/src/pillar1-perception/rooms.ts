@@ -9,6 +9,16 @@ export type RoomType =
 
 export type RoomStatus = "Clean" | "Acceptable" | "NeedsAttention" | "Overdue";
 
+export interface Room {
+  id: string;
+  apartmentId: string;
+  name: string;
+  type: RoomType;
+  status: RoomStatus;
+  lastCleanedAt: Date | null;
+  createdAt: Date;
+}
+
 export const ROOM_STATUS_COLOR: Record<RoomStatus, string> = {
   Clean: "#22c55e",
   Acceptable: "#84cc16",

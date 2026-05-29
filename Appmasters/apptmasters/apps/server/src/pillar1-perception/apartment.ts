@@ -166,4 +166,31 @@ export async function apartmentRoutes(app: FastifyInstance) {
       return { success: true };
     }
   );
+
+  app.post(
+    "/vacation-mode",
+    { preHandler: [requireAuth] },
+    async (req, reply) => {
+      const payload = req.user as JwtPayload;
+      const body = z
+        .object({
+          enabled: z.boolean(),
+          start: z.string().datetime().optional(),
+          end: z.string().datetime().optional(),
+        })
+        .safeParse(req.body);
+      if (!body.success) return reply.status(400).send({ error: body.error.flatten() });
+
+      await db
+        .update(apartmentMembers)
+        .set({
+          vacationMode: body.data.enabled,
+          vacationStart: body.data.start ? new Date(body.data.start) : null,
+          vacationEnd: body.data.end ? new Date(body.data.end) : null,
+        })
+        .where(eq(apartmentMembers.userId, payload.userId));
+
+      return { success: true, vacationMode: body.data.enabled };
+    }
+  );
 }

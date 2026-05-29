@@ -4,7 +4,7 @@
     "module": "CommonJS",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "../..",
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
@@ -14,6 +14,6 @@
       "@apptmasters/utils": ["../../packages/utils/src/index.ts"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../packages/types/src/**/*", "../../packages/utils/src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

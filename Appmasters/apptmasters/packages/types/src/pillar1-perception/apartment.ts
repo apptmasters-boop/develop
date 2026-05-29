@@ -1,5 +1,3 @@
-export type RoomStatus = "Clean" | "Acceptable" | "NeedsAttention" | "Overdue";
-export type InventoryLevel = "Stocked" | "Low" | "Out";
 export type UserRole = "admin" | "member" | "guest";
 
 export interface Apartment {
@@ -10,13 +8,8 @@ export interface Apartment {
   adminId: string;
 }
 
-export interface Room {
-  id: string;
-  apartmentId: string;
-  name: string;
-  type: "kitchen" | "living" | "bathroom" | "hallway" | "balcony" | "laundry" | "custom";
-  status: RoomStatus;
-  lastCleanedAt: Date | null;
+export interface ApartmentMemberWithUser extends ApartmentMember {
+  user: { id: string; name: string; email: string; avatarUrl: string | null; color: string };
 }
 
 export interface ApartmentMember {
