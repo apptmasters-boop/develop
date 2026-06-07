@@ -6,6 +6,7 @@ const server = Fastify({ logger: true });
 
 // ── Auth ──────────────────────────────────────────────
 import { authRoutes } from "./auth/routes";
+import { userRoutes } from "./auth/users";
 
 // ── Pillar 1: Perception & Context ───────────────────
 import { apartmentRoutes } from "./pillar1-perception/apartment";
@@ -42,6 +43,7 @@ async function main() {
   });
 
   server.register(authRoutes, { prefix: "/api/auth" });
+  server.register(userRoutes, { prefix: "/api/users" });
   server.register(apartmentRoutes, { prefix: "/api/apartment" });
   server.register(roomRoutes, { prefix: "/api/rooms" });
   server.register(financesRoutes, { prefix: "/api/finances" });

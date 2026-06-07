@@ -49,6 +49,8 @@ export function ChoresList({
   const [showAddForm, setShowAddForm] = useState(false);
   const [swapChoreId, setSwapChoreId] = useState<string | null>(null);
   const [swapTargetId, setSwapTargetId] = useState("");
+  const [photoChoreId, setPhotoChoreId] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState("");
 
   const filtered = filter === "mine"
     ? chores.filter((c) => c.assignedToUserId === currentUserId)
@@ -61,11 +63,11 @@ export function ChoresList({
 
   const unassignedToRoom = filtered.filter((c) => !c.room);
 
-  async function completeChore(choreId: string) {
+  async function completeChore(choreId: string, photoUrl?: string) {
     await fetch(`${API_URL}/api/chores/${choreId}/complete`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ photoUrl: photoUrl ?? null }),
     });
     startTransition(() => router.refresh());
   }
@@ -143,6 +145,45 @@ export function ChoresList({
         />
       )}
 
+      {/* Photo completion modal */}
+      {photoChoreId && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4">
+            <h3 className="font-semibold text-gray-900">Complete Chore</h3>
+            <p className="text-sm text-gray-500">Optionally add a photo to prove it&apos;s done.</p>
+            <input
+              type="url"
+              placeholder="Photo URL (optional)"
+              value={photoUrl}
+              onChange={(e) => setPhotoUrl(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+            {photoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  completeChore(photoChoreId, photoUrl || undefined);
+                  setPhotoChoreId(null);
+                  setPhotoUrl("");
+                }}
+                className="flex-1 bg-brand text-white rounded-lg py-2 text-sm font-medium"
+              >
+                Mark Done ✓
+              </button>
+              <button
+                onClick={() => { setPhotoChoreId(null); setPhotoUrl(""); }}
+                className="flex-1 border border-gray-200 rounded-lg py-2 text-sm text-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Swap modal */}
       {swapChoreId && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
@@ -203,7 +244,7 @@ export function ChoresList({
                 chore={chore}
                 currentUserId={currentUserId}
                 isPending={isPending}
-                onComplete={() => completeChore(chore.id)}
+                onComplete={() => setPhotoChoreId(chore.id)}
                 onSwap={() => setSwapChoreId(chore.id)}
               />
             ))}
@@ -223,7 +264,7 @@ export function ChoresList({
                 chore={chore}
                 currentUserId={currentUserId}
                 isPending={isPending}
-                onComplete={() => completeChore(chore.id)}
+                onComplete={() => setPhotoChoreId(chore.id)}
                 onSwap={() => setSwapChoreId(chore.id)}
               />
             ))}

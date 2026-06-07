@@ -80,6 +80,7 @@ export default async function ChoresPage() {
           { href: "/chores", label: "Chores", icon: "✓" },
           { href: "/finance", label: "Finance", icon: "$" },
           { href: "/maintenance", label: "Issues", icon: "🔧" },
+          { href: "/settings", label: "Settings", icon: "⚙" },
         ].map((item) => (
           <Link key={item.label} href={item.href}
             className="flex-1 py-3 flex flex-col items-center gap-0.5 text-gray-400 hover:text-brand transition-colors">

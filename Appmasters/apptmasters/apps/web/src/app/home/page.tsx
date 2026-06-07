@@ -218,6 +218,7 @@ export default async function HomePage() {
           { href: "/chores", label: "Chores", icon: "✓" },
           { href: "/finance", label: "Finance", icon: "$" },
           { href: "/maintenance", label: "Issues", icon: "🔧" },
+          { href: "/settings", label: "Settings", icon: "⚙" },
         ].map((item) => (
           <Link
             key={item.label}
