@@ -198,14 +198,21 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Coming Soon modules */}
+        {/* Quick links */}
         <section>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Coming Soon</h2>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">More</h2>
           <div className="grid grid-cols-2 gap-3">
-            {["Inventory", "Rules", "Calendar", "Feed"].map((label) => (
-              <div key={label} className="bg-white rounded-2xl border border-dashed border-gray-200 p-4 text-center">
-                <p className="text-sm text-gray-400">{label}</p>
-              </div>
+            {[
+              { href: "/feed", label: "Activity Feed", icon: "💬" },
+              { href: "/rules", label: "House Rules", icon: "📋" },
+              { href: "/calendar", label: "Calendar", icon: "📅" },
+              { href: "/grocery", label: "Grocery List", icon: "🛒" },
+            ].map((item) => (
+              <Link key={item.href} href={item.href}
+                className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 hover:border-indigo-200 transition-colors group">
+                <span className="text-xl leading-none">{item.icon}</span>
+                <p className="text-sm font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">{item.label}</p>
+              </Link>
             ))}
           </div>
         </section>

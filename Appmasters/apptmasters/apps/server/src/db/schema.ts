@@ -373,3 +373,97 @@ export const choreTemplatesRelations = relations(choreTemplates, ({ one }) => ({
   apartment: one(apartments, { fields: [choreTemplates.apartmentId], references: [apartments.id] }),
   room: one(rooms, { fields: [choreTemplates.roomId], references: [rooms.id] }),
 }));
+
+// ── Phase 5: Activity Feed ────────────────────────────
+
+export const feedPostTypeEnum = pgEnum("feed_post_type", [
+  "chore_completed", "expense_added", "maintenance_reported",
+  "member_joined", "rule_proposed", "rule_passed", "manual",
+]);
+
+export const feedPosts = pgTable("feed_posts", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  type: feedPostTypeEnum("type").notNull(),
+  content: text("content").notNull(),
+  referenceId: text("reference_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const feedPostsRelations = relations(feedPosts, ({ one }) => ({
+  apartment: one(apartments, { fields: [feedPosts.apartmentId], references: [apartments.id] }),
+  user: one(users, { fields: [feedPosts.userId], references: [users.id] }),
+}));
+
+// ── Phase 5: House Rules ──────────────────────────────
+
+export const ruleStatusEnum = pgEnum("rule_status", ["proposed", "active", "rejected"]);
+
+export const houseRules = pgTable("house_rules", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  proposedByUserId: text("proposed_by_user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  status: ruleStatusEnum("status").default("proposed").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+export const houseRuleVotes = pgTable("house_rule_votes", {
+  id: text("id").primaryKey(),
+  ruleId: text("rule_id").notNull().references(() => houseRules.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  vote: boolean("vote").notNull(), // true = yes, false = no
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const houseRulesRelations = relations(houseRules, ({ one, many }) => ({
+  apartment: one(apartments, { fields: [houseRules.apartmentId], references: [apartments.id] }),
+  proposedBy: one(users, { fields: [houseRules.proposedByUserId], references: [users.id] }),
+  votes: many(houseRuleVotes),
+}));
+
+export const houseRuleVotesRelations = relations(houseRuleVotes, ({ one }) => ({
+  rule: one(houseRules, { fields: [houseRuleVotes.ruleId], references: [houseRules.id] }),
+  user: one(users, { fields: [houseRuleVotes.userId], references: [users.id] }),
+}));
+
+// ── Phase 5: Calendar ─────────────────────────────────
+
+export const calendarEvents = pgTable("calendar_events", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  createdByUserId: text("created_by_user_id").notNull().references(() => users.id),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  startAt: timestamp("start_at").notNull(),
+  endAt: timestamp("end_at").notNull(),
+  allDay: boolean("all_day").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
+  apartment: one(apartments, { fields: [calendarEvents.apartmentId], references: [apartments.id] }),
+  createdBy: one(users, { fields: [calendarEvents.createdByUserId], references: [users.id] }),
+}));
+
+// ── Phase 5: Grocery List ─────────────────────────────
+
+export const groceryItems = pgTable("grocery_items", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  addedByUserId: text("added_by_user_id").notNull().references(() => users.id),
+  name: varchar("name", { length: 200 }).notNull(),
+  quantity: varchar("quantity", { length: 50 }),
+  checked: boolean("checked").default(false).notNull(),
+  checkedByUserId: text("checked_by_user_id").references(() => users.id),
+  checkedAt: timestamp("checked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const groceryItemsRelations = relations(groceryItems, ({ one }) => ({
+  apartment: one(apartments, { fields: [groceryItems.apartmentId], references: [apartments.id] }),
+  addedBy: one(users, { fields: [groceryItems.addedByUserId], references: [users.id] }),
+  checkedBy: one(users, { fields: [groceryItems.checkedByUserId], references: [users.id] }),
+}));

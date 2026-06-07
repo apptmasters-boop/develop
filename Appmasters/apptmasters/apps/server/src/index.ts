@@ -18,6 +18,7 @@ import { choresRoutes } from "./pillar2-memory/chores";
 import { maintenanceRoutes } from "./pillar2-memory/maintenance";
 import { inventoryRoutes } from "./pillar2-memory/inventory";
 import { rulesRoutes } from "./pillar2-memory/rules";
+import { groceryRoutes } from "./pillar2-memory/grocery";
 
 // ── Pillar 3: Action & Execution ──────────────────────
 import { notificationsRoutes } from "./pillar3-action/notifications";
@@ -51,6 +52,7 @@ async function main() {
   server.register(maintenanceRoutes, { prefix: "/api/maintenance" });
   server.register(inventoryRoutes, { prefix: "/api/inventory" });
   server.register(rulesRoutes, { prefix: "/api/rules" });
+  server.register(groceryRoutes, { prefix: "/api/grocery" });
   server.register(notificationsRoutes, { prefix: "/api/notifications" });
   server.register(automationsRoutes, { prefix: "/api/automations" });
   server.register(feedRoutes, { prefix: "/api/feed" });
