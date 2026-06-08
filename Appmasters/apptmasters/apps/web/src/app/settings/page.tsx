@@ -3,16 +3,35 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 
-const SETTINGS_ITEMS = [
+const API_URL = process.env.API_URL ?? "http://localhost:4000";
+
+const BASE_ITEMS = [
   { href: "/settings/profile", icon: "👤", label: "Profile", description: "Edit your name and dietary preferences" },
   { href: "/settings/rooms", icon: "🏠", label: "Rooms", description: "Add, remove, and manage apartment rooms" },
   { href: "/settings/members", icon: "👥", label: "Members", description: "View and manage roommates" },
   { href: "/settings/notifications", icon: "🔔", label: "Notifications", description: "Control what you get notified about" },
 ];
 
+const ADMIN_ITEM = { href: "/admin", icon: "🛡️", label: "Admin Panel", description: "Automations, audit log, and chore templates" };
+
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/signin");
+  const token = (session as { token?: string }).token ?? "";
+
+  let isAdmin = false;
+  try {
+    const res = await fetch(`${API_URL}/api/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const me = await res.json();
+      isAdmin = me.membership?.role === "admin";
+    }
+  } catch {}
+
+  const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -25,7 +44,7 @@ export default async function SettingsPage() {
 
       <main className="max-w-lg mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
-          {SETTINGS_ITEMS.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
