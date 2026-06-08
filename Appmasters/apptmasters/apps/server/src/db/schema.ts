@@ -467,3 +467,153 @@ export const groceryItemsRelations = relations(groceryItems, ({ one }) => ({
   addedBy: one(users, { fields: [groceryItems.addedByUserId], references: [users.id] }),
   checkedBy: one(users, { fields: [groceryItems.checkedByUserId], references: [users.id] }),
 }));
+
+// ── Phase 6: Messaging & Calls ────────────────────────
+
+export const messages = pgTable("messages", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  fromUserId: text("from_user_id").notNull().references(() => users.id),
+  toUserId: text("to_user_id").references(() => users.id), // null = group chat
+  content: text("content"),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const callStatusEnum = pgEnum("call_status", ["ringing", "active", "ended", "missed"]);
+export const callTypeEnum = pgEnum("call_type", ["audio", "video"]);
+
+export const callSessions = pgTable("call_sessions", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  initiatorId: text("initiator_id").notNull().references(() => users.id),
+  receiverId: text("receiver_id").references(() => users.id), // null = group call
+  type: callTypeEnum("type").default("audio").notNull(),
+  status: callStatusEnum("status").default("ringing").notNull(),
+  offer: text("offer"),
+  answer: text("answer"),
+  callerIce: text("caller_ice").array().default([]).notNull(),
+  receiverIce: text("receiver_ice").array().default([]).notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+});
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  apartment: one(apartments, { fields: [messages.apartmentId], references: [apartments.id] }),
+  from: one(users, { fields: [messages.fromUserId], references: [users.id] }),
+  to: one(users, { fields: [messages.toUserId], references: [users.id] }),
+}));
+
+export const callSessionsRelations = relations(callSessions, ({ one }) => ({
+  apartment: one(apartments, { fields: [callSessions.apartmentId], references: [apartments.id] }),
+  initiator: one(users, { fields: [callSessions.initiatorId], references: [users.id] }),
+  receiver: one(users, { fields: [callSessions.receiverId], references: [users.id] }),
+}));
+
+// ── Phase 7: Inventory / Supplies ─────────────────────
+
+export const inventoryItems = pgTable("inventory_items", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  addedByUserId: text("added_by_user_id").notNull().references(() => users.id),
+  name: varchar("name", { length: 200 }).notNull(),
+  category: varchar("category", { length: 50 }).default("other").notNull(),
+  quantity: integer("quantity").default(1).notNull(),
+  unit: varchar("unit", { length: 30 }).default("units").notNull(),
+  lowStockThreshold: integer("low_stock_threshold").default(1).notNull(),
+  expiresAt: timestamp("expires_at"),
+  photoUrl: text("photo_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const inventoryItemsRelations = relations(inventoryItems, ({ one }) => ({
+  apartment: one(apartments, { fields: [inventoryItems.apartmentId], references: [apartments.id] }),
+  addedBy: one(users, { fields: [inventoryItems.addedByUserId], references: [users.id] }),
+}));
+
+// ── Phase 8: Disputes ─────────────────────────────────
+
+export const disputeStatusEnum = pgEnum("dispute_status", [
+  "open", "in_review", "resolved", "dismissed",
+]);
+
+export const disputes = pgTable("disputes", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  raisedByUserId: text("raised_by_user_id").notNull().references(() => users.id),
+  againstUserId: text("against_user_id").references(() => users.id), // null = general complaint
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  evidenceUrls: text("evidence_urls").array().default([]).notNull(),
+  status: disputeStatusEnum("status").default("open").notNull(),
+  resolution: text("resolution"),
+  resolvedByUserId: text("resolved_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+export const disputesRelations = relations(disputes, ({ one }) => ({
+  apartment: one(apartments, { fields: [disputes.apartmentId], references: [apartments.id] }),
+  raisedBy: one(users, { fields: [disputes.raisedByUserId], references: [users.id] }),
+  against: one(users, { fields: [disputes.againstUserId], references: [users.id] }),
+  resolvedBy: one(users, { fields: [disputes.resolvedByUserId], references: [users.id] }),
+}));
+
+// ── Phase 8: Audit Log ────────────────────────────────
+
+export const auditLog = pgTable("audit_log", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  action: varchar("action", { length: 100 }).notNull(),
+  entity: varchar("entity", { length: 50 }).notNull(),
+  entityId: text("entity_id"),
+  metadata: text("metadata"), // JSON string
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const auditLogRelations = relations(auditLog, ({ one }) => ({
+  apartment: one(apartments, { fields: [auditLog.apartmentId], references: [apartments.id] }),
+  user: one(users, { fields: [auditLog.userId], references: [users.id] }),
+}));
+
+// ── Phase 8: Move-out Checklist ───────────────────────
+
+export const moveOutItemStatusEnum = pgEnum("move_out_item_status", [
+  "pending", "ok", "needs_repair", "missing",
+]);
+
+export const moveOutChecklists = pgTable("move_out_checklists", {
+  id: text("id").primaryKey(),
+  apartmentId: text("apartment_id").notNull().references(() => apartments.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  scheduledDate: timestamp("scheduled_date"),
+  notes: text("notes"),
+  pdfUrl: text("pdf_url"),
+  submitted: boolean("submitted").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const moveOutChecklistItems = pgTable("move_out_checklist_items", {
+  id: text("id").primaryKey(),
+  checklistId: text("checklist_id").notNull().references(() => moveOutChecklists.id),
+  roomId: text("room_id").references(() => rooms.id),
+  label: varchar("label", { length: 200 }).notNull(),
+  status: moveOutItemStatusEnum("status").default("pending").notNull(),
+  notes: text("notes"),
+  photoUrl: text("photo_url"),
+  sortOrder: integer("sort_order").default(0).notNull(),
+});
+
+export const moveOutChecklistsRelations = relations(moveOutChecklists, ({ one, many }) => ({
+  apartment: one(apartments, { fields: [moveOutChecklists.apartmentId], references: [apartments.id] }),
+  user: one(users, { fields: [moveOutChecklists.userId], references: [users.id] }),
+  items: many(moveOutChecklistItems),
+}));
+
+export const moveOutChecklistItemsRelations = relations(moveOutChecklistItems, ({ one }) => ({
+  checklist: one(moveOutChecklists, { fields: [moveOutChecklistItems.checklistId], references: [moveOutChecklists.id] }),
+  room: one(rooms, { fields: [moveOutChecklistItems.roomId], references: [rooms.id] }),
+}));

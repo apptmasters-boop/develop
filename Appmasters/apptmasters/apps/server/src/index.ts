@@ -27,6 +27,7 @@ import { automationsRoutes } from "./pillar3-action/automations";
 // ── Pillar 4: Collaboration & Communication ───────────
 import { feedRoutes } from "./pillar4-collaboration/feed";
 import { calendarRoutes } from "./pillar4-collaboration/calendar";
+import { commsRoutes } from "./pillar4-collaboration/comms";
 
 // ── Pillar 5: Safety, Ethics & Trust ─────────────────
 import { disputesRoutes } from "./pillar5-trust/disputes";
@@ -57,6 +58,7 @@ async function main() {
   server.register(automationsRoutes, { prefix: "/api/automations" });
   server.register(feedRoutes, { prefix: "/api/feed" });
   server.register(calendarRoutes, { prefix: "/api/calendar" });
+  server.register(commsRoutes, { prefix: "/api/comms" });
   server.register(disputesRoutes, { prefix: "/api/disputes" });
   server.register(auditRoutes, { prefix: "/api/audit" });
   server.register(moveOutRoutes, { prefix: "/api/move-out" });

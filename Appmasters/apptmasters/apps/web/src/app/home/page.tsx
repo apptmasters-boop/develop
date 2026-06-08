@@ -203,10 +203,14 @@ export default async function HomePage() {
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">More</h2>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { href: "/feed", label: "Activity Feed", icon: "💬" },
+              { href: "/chat", label: "Group Chat", icon: "💬" },
+              { href: "/feed", label: "Activity Feed", icon: "📢" },
               { href: "/rules", label: "House Rules", icon: "📋" },
               { href: "/calendar", label: "Calendar", icon: "📅" },
               { href: "/grocery", label: "Grocery List", icon: "🛒" },
+              { href: "/inventory", label: "Inventory", icon: "📦" },
+              { href: "/disputes", label: "Disputes", icon: "⚖️" },
+              { href: "/move-out", label: "Move-out", icon: "🚪" },
             ].map((item) => (
               <Link key={item.href} href={item.href}
                 className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 hover:border-indigo-200 transition-colors group">
