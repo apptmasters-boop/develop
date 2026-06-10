@@ -46,6 +46,11 @@ export default function AppLayout() {
       />
       {/* Screens accessible by navigation but hidden from tab bar */}
       <Tabs.Screen name="maintenance" options={{ href: null }} />
+      <Tabs.Screen name="grocery" options={{ href: null }} />
+      <Tabs.Screen name="disputes" options={{ href: null }} />
+      <Tabs.Screen name="inventory" options={{ href: null }} />
+      <Tabs.Screen name="calendar" options={{ href: null }} />
+      <Tabs.Screen name="feed" options={{ href: null }} />
     </Tabs>
   );
 }

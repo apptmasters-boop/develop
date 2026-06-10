@@ -128,15 +128,17 @@ export default function Home() {
           <View style={styles.quickGrid}>
             {[
               { icon: "chatbubbles", label: "Chat", route: "/(app)/chat" },
+              { icon: "list", label: "Grocery", route: "/(app)/grocery" },
               { icon: "construct", label: "Maintenance", route: "/(app)/maintenance" },
-              { icon: "list", label: "Grocery", route: null },
-              { icon: "shield-checkmark", label: "Disputes", route: null },
+              { icon: "shield-checkmark", label: "Disputes", route: "/(app)/disputes" },
+              { icon: "cube-outline", label: "Supplies", route: "/(app)/inventory" },
+              { icon: "calendar-outline", label: "Calendar", route: "/(app)/calendar" },
+              { icon: "newspaper-outline", label: "Activity", route: "/(app)/feed" },
             ].map(item => (
               <TouchableOpacity
                 key={item.label}
                 style={styles.quickCard}
-                onPress={() => item.route && router.push(item.route as never)}
-                disabled={!item.route}
+                onPress={() => router.push(item.route as never)}
               >
                 <Ionicons name={item.icon as never} size={22} color={Colors.primary} />
                 <Text style={styles.quickLabel}>{item.label}</Text>
