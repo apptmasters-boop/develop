@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end", backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
+  bubbleThem: {},
   senderName: { fontSize: 11, fontWeight: "600", color: Colors.primary, marginBottom: 3 },
   bubbleText: { fontSize: 15, color: Colors.text, lineHeight: 20 },
   bubbleTextMe: { color: "#fff" },
