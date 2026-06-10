@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   View, Text, FlatList, StyleSheet, RefreshControl,
-  TouchableOpacity, TextInput, Modal, ActivityIndicator, ScrollView,
+  TouchableOpacity, TextInput, Modal, ActivityIndicator, ScrollView, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useApi } from "../../contexts/useApi";
@@ -12,16 +12,26 @@ type Dispute = {
   id: string;
   title: string;
   description: string;
-  status: "open" | "resolved" | "closed";
+  status: "open" | "in_review" | "resolved" | "dismissed";
   createdAt: string;
-  createdBy: { id: string; name: string };
-  votes?: { userId: string; vote: "agree" | "disagree" }[];
+  raisedBy: { id: string; name: string } | null;
+  against: { id: string; name: string } | null;
+  resolvedBy: { id: string; name: string } | null;
+  resolution: string | null;
 };
 
 const STATUS_COLOR: Record<string, string> = {
   open: Colors.primary,
+  in_review: Colors.warning,
   resolved: Colors.success,
-  closed: Colors.textMuted,
+  dismissed: Colors.textMuted,
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  open: "Open",
+  in_review: "In Review",
+  resolved: "Resolved",
+  dismissed: "Dismissed",
 };
 
 export default function Disputes() {
@@ -60,21 +70,24 @@ export default function Disputes() {
     finally { setSubmitting(false); }
   }
 
-  async function vote(id: string, vote: "agree" | "disagree") {
-    try {
-      await request(`/api/disputes/${id}/vote`, { method: "POST", body: JSON.stringify({ vote }) });
-      load();
-    } catch {}
-  }
-
   async function resolve(id: string) {
-    try {
-      await request(`/api/disputes/${id}/resolve`, { method: "PATCH" });
-      load();
-    } catch {}
+    Alert.alert("Mark Resolved", "Mark this dispute as resolved?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Resolve", style: "default",
+        onPress: async () => {
+          try {
+            await request(`/api/disputes/${id}/resolve`, { method: "POST" });
+            load();
+          } catch {}
+        },
+      },
+    ]);
   }
 
-  const filtered = activeFilter === "all" ? disputes : disputes.filter(d => d.status === activeFilter);
+  const filtered = activeFilter === "all" ? disputes : disputes.filter(d =>
+    activeFilter === "open" ? d.status === "open" || d.status === "in_review" : d.status === "resolved"
+  );
 
   if (loading) {
     return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.primary} /></View>;
@@ -85,7 +98,7 @@ export default function Disputes() {
       <View style={styles.header}>
         <Text style={styles.title}>Disputes</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => setShowAdd(true)}>
-          <Text style={styles.addBtnText}>+ New</Text>
+          <Text style={styles.addBtnText}>+ Raise</Text>
         </TouchableOpacity>
       </View>
 
@@ -115,49 +128,45 @@ export default function Disputes() {
           </View>
         }
         renderItem={({ item }) => {
-          const agrees = item.votes?.filter(v => v.vote === "agree").length ?? 0;
-          const disagrees = item.votes?.filter(v => v.vote === "disagree").length ?? 0;
-          const myVote = item.votes?.find(v => v.userId === user?.id)?.vote;
-          const isAuthor = item.createdBy.id === user?.id;
+          const isAuthor = item.raisedBy?.id === user?.id;
+          const canResolve = isAuthor && item.status === "open";
 
           return (
             <View style={styles.card}>
               <View style={styles.cardTop}>
                 <View style={styles.cardMeta}>
                   <View style={[styles.statusDot, { backgroundColor: STATUS_COLOR[item.status] ?? Colors.textMuted }]} />
-                  <Text style={styles.cardStatus}>{item.status}</Text>
+                  <Text style={[styles.cardStatus, { color: STATUS_COLOR[item.status] }]}>
+                    {STATUS_LABEL[item.status] ?? item.status}
+                  </Text>
                 </View>
                 <Text style={styles.cardDate}>{formatDate(item.createdAt)}</Text>
               </View>
 
               <Text style={styles.cardTitle}>{item.title}</Text>
               <Text style={styles.cardDesc}>{item.description}</Text>
-              <Text style={styles.cardAuthor}>by {item.createdBy.name}</Text>
 
-              {item.status === "open" && (
-                <View style={styles.voteRow}>
-                  <TouchableOpacity
-                    style={[styles.voteBtn, myVote === "agree" && styles.voteBtnActive]}
-                    onPress={() => vote(item.id, "agree")}
-                  >
-                    <Text style={[styles.voteBtnText, myVote === "agree" && styles.voteBtnTextActive]}>
-                      👍 {agrees}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.voteBtn, myVote === "disagree" && styles.voteBtnNeg]}
-                    onPress={() => vote(item.id, "disagree")}
-                  >
-                    <Text style={[styles.voteBtnText, myVote === "disagree" && styles.voteBtnTextActive]}>
-                      👎 {disagrees}
-                    </Text>
-                  </TouchableOpacity>
-                  {isAuthor && (
-                    <TouchableOpacity style={styles.resolveBtn} onPress={() => resolve(item.id)}>
-                      <Text style={styles.resolveBtnText}>Mark Resolved</Text>
-                    </TouchableOpacity>
-                  )}
+              <View style={styles.cardFooter}>
+                <Text style={styles.cardAuthor}>
+                  Raised by {item.raisedBy?.name ?? "Unknown"}
+                  {item.against ? ` · Against ${item.against.name}` : ""}
+                </Text>
+                {item.status === "resolved" && item.resolvedBy && (
+                  <Text style={styles.resolvedBy}>Resolved by {item.resolvedBy.name}</Text>
+                )}
+              </View>
+
+              {item.resolution ? (
+                <View style={styles.resolutionBox}>
+                  <Text style={styles.resolutionLabel}>Resolution</Text>
+                  <Text style={styles.resolutionText}>{item.resolution}</Text>
                 </View>
+              ) : null}
+
+              {canResolve && (
+                <TouchableOpacity style={styles.resolveBtn} onPress={() => resolve(item.id)}>
+                  <Text style={styles.resolveBtnText}>Mark Resolved</Text>
+                </TouchableOpacity>
               )}
             </View>
           );
@@ -170,7 +179,7 @@ export default function Disputes() {
             <TouchableOpacity onPress={() => setShowAdd(false)}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>New Dispute</Text>
+            <Text style={styles.modalTitle}>Raise Dispute</Text>
             <TouchableOpacity onPress={submit} disabled={submitting || !title.trim() || !desc.trim()}>
               <Text style={[styles.saveText, (!title.trim() || !desc.trim() || submitting) && { opacity: 0.4 }]}>
                 {submitting ? "Submitting…" : "Submit"}
@@ -230,18 +239,17 @@ const styles = StyleSheet.create({
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   cardMeta: { flexDirection: "row", alignItems: "center", gap: 6 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  cardStatus: { fontSize: 11, color: Colors.textSecondary, textTransform: "uppercase", fontWeight: "600", letterSpacing: 0.5 },
+  cardStatus: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
   cardDate: { fontSize: 11, color: Colors.textMuted },
   cardTitle: { fontSize: 16, fontWeight: "700", color: Colors.text },
   cardDesc: { fontSize: 14, color: Colors.textSecondary, lineHeight: 20 },
+  cardFooter: { gap: 2 },
   cardAuthor: { fontSize: 12, color: Colors.textMuted },
-  voteRow: { flexDirection: "row", gap: 8, marginTop: 6, alignItems: "center", flexWrap: "wrap" },
-  voteBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.borderStrong },
-  voteBtnActive: { backgroundColor: Colors.primaryLight, borderColor: Colors.primary },
-  voteBtnNeg: { backgroundColor: Colors.errorLight, borderColor: Colors.error },
-  voteBtnText: { fontSize: 13, color: Colors.textSecondary, fontWeight: "500" },
-  voteBtnTextActive: { color: Colors.primary },
-  resolveBtn: { marginLeft: "auto", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.successLight, borderWidth: 1, borderColor: Colors.success },
+  resolvedBy: { fontSize: 12, color: Colors.success },
+  resolutionBox: { backgroundColor: Colors.successLight, borderRadius: 10, padding: 12, gap: 4 },
+  resolutionLabel: { fontSize: 11, fontWeight: "700", color: Colors.success, textTransform: "uppercase", letterSpacing: 0.5 },
+  resolutionText: { fontSize: 13, color: Colors.text },
+  resolveBtn: { alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.successLight, borderWidth: 1, borderColor: Colors.success, marginTop: 4 },
   resolveBtnText: { fontSize: 13, color: Colors.success, fontWeight: "600" },
   modal: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
@@ -253,7 +261,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 16, fontWeight: "700", color: Colors.text },
   saveText: { fontSize: 15, fontWeight: "600", color: Colors.primary },
   modalBody: { padding: 20 },
-  label: { fontSize: 13, fontWeight: "600", color: Colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.5 },
+  label: { fontSize: 13, fontWeight: "600", color: Colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 },
   input: { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, fontSize: 15, color: Colors.text, borderWidth: 1, borderColor: Colors.borderStrong },
   textArea: { minHeight: 120, textAlignVertical: "top" },
 });

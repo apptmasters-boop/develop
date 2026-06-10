@@ -102,4 +102,34 @@ export async function disputesRoutes(app: FastifyInstance) {
 
     return updated;
   });
+
+  // POST /api/disputes/:id/resolve — author or admin marks as resolved
+  app.post<{ Params: { id: string }; Body: { resolution?: string } }>(
+    "/:id/resolve",
+    async (request, reply) => {
+      const m = await getMembership(app, request as never);
+      if (!m) return reply.status(401).send({ error: "Unauthorized" });
+
+      const dispute = await db.query.disputes.findFirst({
+        where: and(eq(disputes.id, request.params.id), eq(disputes.apartmentId, m.apartmentId)),
+      });
+      if (!dispute) return reply.status(404).send({ error: "Not found" });
+      if (dispute.raisedByUserId !== m.sub && m.role !== "admin") {
+        return reply.status(403).send({ error: "Only the author or admin can resolve" });
+      }
+
+      const [updated] = await db.update(disputes)
+        .set({
+          status: "resolved",
+          resolvedAt: new Date(),
+          resolvedByUserId: m.sub,
+          resolution: (request.body as Record<string, string>)?.resolution ?? null,
+        })
+        .where(eq(disputes.id, request.params.id))
+        .returning();
+
+      await writeAudit(m.apartmentId, m.sub, "dispute_resolved", "dispute", dispute.id);
+      return updated;
+    }
+  );
 }

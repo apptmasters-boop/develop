@@ -12,17 +12,10 @@ type CalEvent = {
   id: string;
   title: string;
   description: string | null;
-  startDate: string;
-  endDate: string | null;
-  type: "chore" | "payment" | "event" | "reminder";
-  createdBy: { name: string };
-};
-
-const TYPE_COLOR: Record<string, string> = {
-  chore: Colors.primary,
-  payment: Colors.success,
-  event: "#8b5cf6",
-  reminder: Colors.warning,
+  startAt: string;
+  endAt: string;
+  allDay: boolean;
+  createdBy: { id: string; name: string; color?: string };
 };
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -36,13 +29,15 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewMonth, setViewMonth] = useState(new Date());
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", startDate: toDateStr(new Date()), type: "event" as CalEvent["type"] });
+  const [form, setForm] = useState({ title: "", description: "", date: toDateStr(new Date()), allDay: true });
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const y = viewMonth.getFullYear(), m = viewMonth.getMonth() + 1;
-      const data = await request<CalEvent[]>(`/api/calendar?year=${y}&month=${m}`);
+      const y = viewMonth.getFullYear();
+      const m = String(viewMonth.getMonth() + 1).padStart(2, "0");
+      const from = `${y}-${m}-01T00:00:00.000Z`;
+      const data = await request<CalEvent[]>(`/api/calendar?from=${encodeURIComponent(from)}`);
       setEvents(data ?? []);
     } catch {}
     finally { setLoading(false); setRefreshing(false); }
@@ -51,14 +46,22 @@ export default function Calendar() {
   useEffect(() => { load(); }, [viewMonth]);
 
   async function addEvent() {
-    if (!form.title.trim()) return;
+    if (!form.title.trim() || !form.date) return;
     setSubmitting(true);
     try {
+      const startAt = new Date(`${form.date}T00:00:00.000Z`).toISOString();
+      const endAt = new Date(`${form.date}T23:59:59.000Z`).toISOString();
       await request("/api/calendar", {
         method: "POST",
-        body: JSON.stringify({ ...form, title: form.title.trim(), description: form.description.trim() || null }),
+        body: JSON.stringify({
+          title: form.title.trim(),
+          description: form.description.trim() || undefined,
+          startAt,
+          endAt,
+          allDay: form.allDay,
+        }),
       });
-      setForm({ title: "", description: "", startDate: toDateStr(new Date()), type: "event" });
+      setForm({ title: "", description: "", date: toDateStr(new Date()), allDay: true });
       setShowAdd(false);
       load();
     } catch {}
@@ -75,7 +78,7 @@ export default function Calendar() {
   const calDays = buildCalendar(viewMonth);
   const eventsByDate: Record<string, CalEvent[]> = {};
   events.forEach(e => {
-    const key = e.startDate.slice(0, 10);
+    const key = e.startAt.slice(0, 10);
     if (!eventsByDate[key]) eventsByDate[key] = [];
     eventsByDate[key].push(e);
   });
@@ -125,8 +128,8 @@ export default function Calendar() {
               <Text style={[styles.dayNum, isToday && styles.dayNumToday, isSel && styles.dayNumSel]}>{parseInt(day.slice(8))}</Text>
               {dots.length > 0 && (
                 <View style={styles.dots}>
-                  {dots.slice(0, 3).map((e, j) => (
-                    <View key={j} style={[styles.dot, { backgroundColor: TYPE_COLOR[e.type] ?? Colors.primary }]} />
+                  {dots.slice(0, 3).map((_, j) => (
+                    <View key={j} style={styles.dot} />
                   ))}
                 </View>
               )}
@@ -146,11 +149,13 @@ export default function Calendar() {
         contentContainerStyle={styles.eventList}
         ListEmptyComponent={<Text style={styles.noEvents}>No events</Text>}
         renderItem={({ item }) => (
-          <View style={[styles.eventCard, { borderLeftColor: TYPE_COLOR[item.type] ?? Colors.primary }]}>
+          <View style={styles.eventCard}>
             <View style={styles.eventInfo}>
               <Text style={styles.eventTitle}>{item.title}</Text>
               {item.description && <Text style={styles.eventDesc}>{item.description}</Text>}
-              <Text style={styles.eventMeta}>{item.type} · {item.createdBy.name}</Text>
+              <Text style={styles.eventMeta}>
+                {item.allDay ? "All day" : formatTime(item.startAt)} · {item.createdBy.name}
+              </Text>
             </View>
           </View>
         )}
@@ -173,20 +178,24 @@ export default function Calendar() {
             <Text style={styles.label}>Title</Text>
             <TextInput style={styles.input} value={form.title} onChangeText={v => setForm(f => ({ ...f, title: v }))} placeholder="Event title" placeholderTextColor={Colors.textMuted} />
 
-            <Text style={styles.label}>Date</Text>
-            <TextInput style={styles.input} value={form.startDate} onChangeText={v => setForm(f => ({ ...f, startDate: v }))} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
-
-            <Text style={styles.label}>Type</Text>
-            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-              {(["event", "chore", "payment", "reminder"] as const).map(t => (
-                <TouchableOpacity key={t} style={[styles.typeChip, form.type === t && { backgroundColor: TYPE_COLOR[t], borderColor: TYPE_COLOR[t] }]} onPress={() => setForm(f => ({ ...f, type: t }))}>
-                  <Text style={[styles.typeText, form.type === t && { color: "#fff" }]}>{t}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
+            <TextInput
+              style={styles.input}
+              value={form.date}
+              onChangeText={v => setForm(f => ({ ...f, date: v }))}
+              placeholder="2026-06-15"
+              placeholderTextColor={Colors.textMuted}
+            />
 
             <Text style={styles.label}>Notes (optional)</Text>
-            <TextInput style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]} value={form.description} onChangeText={v => setForm(f => ({ ...f, description: v }))} placeholder="Details…" placeholderTextColor={Colors.textMuted} multiline />
+            <TextInput
+              style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]}
+              value={form.description}
+              onChangeText={v => setForm(f => ({ ...f, description: v }))}
+              placeholder="Details…"
+              placeholderTextColor={Colors.textMuted}
+              multiline
+            />
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -196,6 +205,10 @@ export default function Calendar() {
 
 function toDateStr(d: Date) {
   return d.toISOString().slice(0, 10);
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function buildCalendar(month: Date): (string | null)[] {
@@ -238,16 +251,16 @@ const styles = StyleSheet.create({
   dayNumToday: { color: Colors.primary, fontWeight: "700" },
   dayNumSel: { color: "#fff", fontWeight: "700" },
   dots: { flexDirection: "row", gap: 2, marginTop: 2 },
-  dot: { width: 4, height: 4, borderRadius: 2 },
+  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.primary },
   dayHeader: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
   dayHeaderText: { fontSize: 14, fontWeight: "600", color: Colors.textSecondary },
   eventList: { padding: 16, gap: 8, paddingBottom: 32, flexGrow: 1 },
   noEvents: { textAlign: "center", color: Colors.textMuted, marginTop: 20, fontSize: 14 },
-  eventCard: { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: Colors.border, borderLeftWidth: 4 },
+  eventCard: { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: Colors.border, borderLeftWidth: 4, borderLeftColor: Colors.primary },
   eventInfo: { gap: 2 },
   eventTitle: { fontSize: 15, fontWeight: "600", color: Colors.text },
   eventDesc: { fontSize: 13, color: Colors.textSecondary },
-  eventMeta: { fontSize: 11, color: Colors.textMuted, marginTop: 2, textTransform: "capitalize" },
+  eventMeta: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
   modal: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
@@ -260,6 +273,4 @@ const styles = StyleSheet.create({
   modalBody: { padding: 20 },
   label: { fontSize: 13, fontWeight: "600", color: Colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 },
   input: { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, fontSize: 15, color: Colors.text, borderWidth: 1, borderColor: Colors.borderStrong },
-  typeChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.borderStrong },
-  typeText: { fontSize: 13, color: Colors.textSecondary, fontWeight: "500", textTransform: "capitalize" },
 });
