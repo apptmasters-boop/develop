@@ -51,6 +51,8 @@ export default function AppLayout() {
       <Tabs.Screen name="inventory" options={{ href: null }} />
       <Tabs.Screen name="calendar" options={{ href: null }} />
       <Tabs.Screen name="feed" options={{ href: null }} />
+      <Tabs.Screen name="rules" options={{ href: null }} />
+      <Tabs.Screen name="move-out" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -134,6 +134,8 @@ export default function Home() {
               { icon: "cube-outline", label: "Supplies", route: "/(app)/inventory" },
               { icon: "calendar-outline", label: "Calendar", route: "/(app)/calendar" },
               { icon: "newspaper-outline", label: "Activity", route: "/(app)/feed" },
+              { icon: "document-text-outline", label: "Rules", route: "/(app)/rules" },
+              { icon: "exit-outline", label: "Move Out", route: "/(app)/move-out" },
             ].map(item => (
               <TouchableOpacity
                 key={item.label}

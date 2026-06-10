@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1781065349257,
+      "tag": "0000_silent_maximus",
+      "breakpoints": true
+    }
+  ]
+}
