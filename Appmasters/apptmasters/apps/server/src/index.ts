@@ -34,6 +34,9 @@ import { disputesRoutes } from "./pillar5-trust/disputes";
 import { auditRoutes } from "./pillar5-trust/audit";
 import { moveOutRoutes } from "./pillar5-trust/move-out";
 
+// ── Platform Admin ────────────────────────────────────
+import { adminRoutes } from "./admin/routes";
+
 async function main() {
   await server.register(cors, {
     origin: process.env.WEB_URL ?? "http://localhost:3000",
@@ -62,6 +65,7 @@ async function main() {
   server.register(disputesRoutes, { prefix: "/api/disputes" });
   server.register(auditRoutes, { prefix: "/api/audit" });
   server.register(moveOutRoutes, { prefix: "/api/move-out" });
+  server.register(adminRoutes, { prefix: "/api/admin" });
 
   await server.listen({ port: 4000, host: "0.0.0.0" });
 }

@@ -1,6 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { API_BASE } from "../constants/api";
+
+const storage = {
+  getItemAsync: (key: string) =>
+    Platform.OS === "web"
+      ? Promise.resolve(localStorage.getItem(key))
+      : SecureStore.getItemAsync(key),
+  setItemAsync: (key: string, value: string) =>
+    Platform.OS === "web"
+      ? Promise.resolve(localStorage.setItem(key, value))
+      : SecureStore.setItemAsync(key, value),
+  deleteItemAsync: (key: string) =>
+    Platform.OS === "web"
+      ? Promise.resolve(localStorage.removeItem(key))
+      : SecureStore.deleteItemAsync(key),
+};
 
 type User = { id: string; email: string; name: string };
 
@@ -35,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    SecureStore.getItemAsync(TOKEN_KEY).then((t) => {
+    storage.getItemAsync(TOKEN_KEY).then((t) => {
       if (t) {
         setToken(t);
         const payload = decodeJwtPayload(t) as { userId?: string; email?: string; apartmentId?: string };
@@ -65,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    await SecureStore.setItemAsync(TOKEN_KEY, data.token);
+    await storage.setItemAsync(TOKEN_KEY, data.token);
     setToken(data.token);
     setUser(data.user);
     const payload = decodeJwtPayload(data.token) as { apartmentId?: string };
@@ -77,14 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       method: "POST",
       body: JSON.stringify({ email, name, password }),
     });
-    await SecureStore.setItemAsync(TOKEN_KEY, data.token);
+    await storage.setItemAsync(TOKEN_KEY, data.token);
     setToken(data.token);
     setUser(data.user);
     setApartmentId(null);
   }
 
   async function signOut() {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await storage.deleteItemAsync(TOKEN_KEY);
     setToken(null);
     setUser(null);
     setApartmentId(null);

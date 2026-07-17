@@ -10,6 +10,7 @@ import {
 import { relations } from "drizzle-orm";
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "member", "guest"]);
+export const platformRoleEnum = pgEnum("platform_role", ["super_admin", "landlord", "tenant"]);
 export const memberStatusEnum = pgEnum("member_status", ["active", "former"]);
 export const roomTypeEnum = pgEnum("room_type", [
   "kitchen",
@@ -34,6 +35,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   avatarUrl: text("avatar_url"),
   color: varchar("color", { length: 7 }).default("#6366f1"),
+  platformRole: platformRoleEnum("platform_role").default("tenant").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

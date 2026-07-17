@@ -24,7 +24,7 @@ export const authOptions: NextAuthOptions = {
           });
           if (!res.ok) return null;
           const data = await res.json();
-          return { id: data.user.id, email: data.user.email, name: data.user.name, token: data.token };
+          return { id: data.user.id, email: data.user.email, name: data.user.name, token: data.token, platformRole: data.user.platformRole };
         } catch {
           return null;
         }
@@ -36,6 +36,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.apiToken = (user as unknown as { token: string }).token;
+        token.platformRole = (user as unknown as { platformRole: string }).platformRole;
       }
       return token;
     },
@@ -43,7 +44,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as { id?: string }).id = token.id as string;
       }
-      (session as unknown as { token: string }).token = token.apiToken as string;
+      (session as unknown as { token: string; platformRole: string }).token = token.apiToken as string;
+      (session as unknown as { token: string; platformRole: string }).platformRole = token.platformRole as string;
       return session;
     },
   },

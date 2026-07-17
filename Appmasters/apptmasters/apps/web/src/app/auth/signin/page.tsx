@@ -24,7 +24,10 @@ export default function SignInPage() {
     if (result?.error) {
       setError("Invalid email or password");
     } else {
-      router.push("/home");
+      const { getSession } = await import("next-auth/react");
+      const session = await getSession();
+      const role = (session as unknown as { platformRole?: string })?.platformRole;
+      router.push(role === "super_admin" ? "/admin" : "/home");
     }
   }
 

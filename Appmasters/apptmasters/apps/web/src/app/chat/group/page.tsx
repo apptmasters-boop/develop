@@ -22,6 +22,7 @@ export default function GroupChatPage() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   async function load() {
     if (!token) return;
@@ -45,6 +46,13 @@ export default function GroupChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [text]);
 
   async function send() {
     if (!text.trim()) return;
@@ -121,14 +129,20 @@ export default function GroupChatPage() {
       </main>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3">
-        <div className="max-w-lg mx-auto flex gap-2">
-          <input
-            type="text"
+        <div className="max-w-lg mx-auto flex gap-2 items-end">
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
             placeholder="Message everyone…"
-            className="flex-1 bg-gray-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 bg-gray-100 rounded-xl px-4 py-2 text-sm leading-snug resize-none max-h-52 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
             onClick={send}

@@ -67,8 +67,9 @@ export async function authRoutes(app: FastifyInstance) {
       userId: user.id,
       email: user.email,
       apartmentId: membership?.apartmentId ?? null,
+      platformRole: user.platformRole,
     });
-    return { token, user: { id: user.id, email: user.email, name: user.name } };
+    return { token, user: { id: user.id, email: user.email, name: user.name, platformRole: user.platformRole } };
   });
 
   app.get("/me", {
