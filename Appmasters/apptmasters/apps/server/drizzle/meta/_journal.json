@@ -8,6 +8,13 @@
       "when": 1781065349257,
       "tag": "0000_silent_maximus",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1791066681848,
+      "tag": "0001_friendly_tigra",
+      "breakpoints": true
     }
   ]
 }

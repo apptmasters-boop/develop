@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS "apartment_members" (
 	"vacation_mode" boolean DEFAULT false NOT NULL,
 	"vacation_start" timestamp,
 	"vacation_end" timestamp,
-	"dietary_flags" text[] DEFAULT  NOT NULL,
+	"dietary_flags" text[] DEFAULT '{}' NOT NULL,
 	"status" "member_status" DEFAULT 'active' NOT NULL
 );
 --> statement-breakpoint
@@ -161,8 +161,8 @@ CREATE TABLE IF NOT EXISTS "call_sessions" (
 	"status" "call_status" DEFAULT 'ringing' NOT NULL,
 	"offer" text,
 	"answer" text,
-	"caller_ice" text[] DEFAULT  NOT NULL,
-	"receiver_ice" text[] DEFAULT  NOT NULL,
+	"caller_ice" text[] DEFAULT '{}' NOT NULL,
+	"receiver_ice" text[] DEFAULT '{}' NOT NULL,
 	"started_at" timestamp DEFAULT now() NOT NULL,
 	"ended_at" timestamp
 );
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS "disputes" (
 	"against_user_id" text,
 	"title" varchar(200) NOT NULL,
 	"description" text NOT NULL,
-	"evidence_urls" text[] DEFAULT  NOT NULL,
+	"evidence_urls" text[] DEFAULT '{}' NOT NULL,
 	"status" "dispute_status" DEFAULT 'open' NOT NULL,
 	"resolution" text,
 	"resolved_by_user_id" text,
@@ -317,7 +317,7 @@ CREATE TABLE IF NOT EXISTS "maintenance_issues" (
 	"reported_by_user_id" text NOT NULL,
 	"description" text NOT NULL,
 	"urgency" "urgency" DEFAULT 'medium' NOT NULL,
-	"photo_urls" text[] DEFAULT  NOT NULL,
+	"photo_urls" text[] DEFAULT '{}' NOT NULL,
 	"status" "maintenance_status" DEFAULT 'Reported' NOT NULL,
 	"resolved_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL
@@ -398,7 +398,7 @@ CREATE TABLE IF NOT EXISTS "recurring_expenses" (
 	"amount" integer NOT NULL,
 	"split_method" "split_method" DEFAULT 'equal' NOT NULL,
 	"day_of_month" integer DEFAULT 1 NOT NULL,
-	"participants" text[] DEFAULT  NOT NULL,
+	"participants" text[] DEFAULT '{}' NOT NULL,
 	"active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
