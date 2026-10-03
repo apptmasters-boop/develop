@@ -6,8 +6,9 @@ import {
   integer,
   varchar,
   pgEnum,
+  real,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "member", "guest"]);
 export const platformRoleEnum = pgEnum("platform_role", ["super_admin", "landlord", "tenant"]);
@@ -618,4 +619,42 @@ export const moveOutChecklistsRelations = relations(moveOutChecklists, ({ one, m
 export const moveOutChecklistItemsRelations = relations(moveOutChecklistItems, ({ one }) => ({
   checklist: one(moveOutChecklists, { fields: [moveOutChecklistItems.checklistId], references: [moveOutChecklists.id] }),
   room: one(rooms, { fields: [moveOutChecklistItems.roomId], references: [rooms.id] }),
+}));
+
+// ── Marketplace: Listings ─────────────────────────────
+
+export const listingTypeEnum = pgEnum("listing_type", [
+  "private_room", "shared_room", "room_in_apartment", "community_home", "roommate_wanted",
+]);
+export const listingStatusEnum = pgEnum("listing_status", ["active", "inactive"]);
+
+export const listings = pgTable("listings", {
+  id: text("id").primaryKey(),
+  ownerUserId: text("owner_user_id").notNull().references(() => users.id),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  listingType: listingTypeEnum("listing_type").notNull(),
+  neighborhood: varchar("neighborhood", { length: 100 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 2 }).notNull(),
+  priceCents: integer("price_cents").notNull(),
+  sharedExpensesCents: integer("shared_expenses_cents").default(0).notNull(),
+  roommatesCount: integer("roommates_count").default(0).notNull(),
+  bathroomsCount: integer("bathrooms_count").default(1).notNull(),
+  maxOccupants: integer("max_occupants").default(1).notNull(),
+  availableFrom: timestamp("available_from").notNull(),
+  minStayMonths: integer("min_stay_months").default(1).notNull(),
+  photos: text("photos").array().default(sql`'{}'`).notNull(),
+  verified: boolean("verified").default(false).notNull(),
+  // verified_people | community_match | affordable | quiet_home | same_language | furnished | utilities_included
+  tags: text("tags").array().default(sql`'{}'`).notNull(),
+  // Placeholder values until reviews exist
+  ratingAvg: real("rating_avg"),
+  staysCount: integer("stays_count"),
+  status: listingStatusEnum("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const listingsRelations = relations(listings, ({ one }) => ({
+  owner: one(users, { fields: [listings.ownerUserId], references: [users.id] }),
 }));

@@ -12,3 +12,4 @@ export * from "./pillar4-collaboration/feed";
 export * from "./pillar4-collaboration/calendar";
 export * from "./pillar5-trust/disputes";
 export * from "./pillar5-trust/audit";
+export * from "./marketplace/listings";
